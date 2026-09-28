@@ -42,6 +42,7 @@ export default function App() {
   const [storageWarning, setStorageWarning] = useState(false);
   const [hashError, setHashError] = useState(false);
   const [largeFileWarning, setLargeFileWarning] = useState(false);
+  const [verifyingFile, setVerifyingFile] = useState(false);
 
   // Load receipts from localStorage on mount
   useEffect(() => {
@@ -78,7 +79,7 @@ export default function App() {
 
   async function handleVerifyFile(file: File) {
     if (!currentReceipt) return;
-    setAppState("verifying");
+    setVerifyingFile(true);
     try {
       const candidateHash = await sha256(file);
       const result: VerificationResult =
@@ -109,8 +110,10 @@ export default function App() {
           : prev
       );
 
+      setVerifyingFile(false);
       setAppState(result === "match" ? "verified" : "mismatch");
     } catch {
+      setVerifyingFile(false);
       setHashError(true);
       setAppState("registered");
     }
@@ -120,6 +123,7 @@ export default function App() {
     setCurrentReceipt(receipt);
     setVerificationState(null);
     setStorageWarning(false);
+    setVerifyingFile(false);
     setAppState("registered");
   }
 
@@ -129,11 +133,13 @@ export default function App() {
     setStorageWarning(false);
     setHashError(false);
     setLargeFileWarning(false);
+    setVerifyingFile(false);
     setAppState("home");
   }
 
   function handleVerifyAnother() {
     setVerificationState(null);
+    setVerifyingFile(false);
     setAppState("registered");
   }
 
@@ -201,7 +207,7 @@ export default function App() {
           <div className="pt-4">
             <VerificationPanel
               receipt={currentReceipt}
-              processing={true}
+              processing={verifyingFile}
               onFile={handleVerifyFile}
               onCancel={() => setAppState("registered")}
             />
